@@ -1,4 +1,5 @@
 # Name: Wenkang Su, Donald Tang
+# wsu1, dtang4
 # I pledge my honor that I have abided by the Stevens Honor System. 
 # Name of your program:
 NAME = main
@@ -10,9 +11,10 @@ SRC = main.cpp
 SRCPATH=./
 OBJ=$(addprefix $(SRCPATH), $(SRC:.cpp=.o))
 
-RM=rm -f
+RM=rm -f 
 INCPATH=includes
-CPPFLAGS+= -I $(INCPATH)
+CPPFLAGS += -I $(INCPATH)
+CPPFLAGS += -std=c++11
 
 
 all: $(OBJ)

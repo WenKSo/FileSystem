@@ -1,4 +1,5 @@
 // Name: Wenkang Su & Donald Tang
+// wsu1, dtang4
 // I pledge my honor that I have abided by the Stevens Honor System.
 #ifndef FNODE_H_
 #define FNODE_H_
@@ -9,14 +10,16 @@
 
 using namespace std;
 
+//fNode class is used to represent a node in LFile
 class fNode {
 
 public:
-    int startAddress;
-    fNode *next;
+    int startAddress;   //indicates the first address of the block that the file is located in
+    fNode *next;    //pointer to the next node in LFile
 
     fNode(int startAddress) {
     	this->startAddress = startAddress;
+        this->next = NULL;
     }
 };
 
