@@ -1,20 +1,11 @@
-1 0 ---------- 1 wenkang wenkang 10 Mar 20 10:51 ./cow
-1 0 ---------- 1 wenkang wenkang 11 Mar 20 10:51 ./dog
-1 0 ---------- 1 wenkang wenkang 12 Mar 20 10:51 ./apple
-1 0 ---------- 1 wenkang wenkang 13 Mar 20 10:51 ./A/cat
-1 0 ---------- 1 wenkang wenkang 14 Mar 20 10:51 ./B/dolphin
-1 0 ---------- 1 wenkang wenkang 15 Mar 20 10:51 ./C/duck
-1 0 ---------- 1 wenkang wenkang 16 Nov 20 10:51 ./D/goose
-1 0 ---------- 1 wenkang wenkang 17 Mar 20 10:51 ./A/B/whale
-1 0 ---------- 1 wenkang wenkang 18 Mar 20 10:51 ./A/A/ostrich
-1 0 ---------- 1 wenkang wenkang 19 Mar 20 10:51 ./B/A/wolf
-1 0 ---------- 1 wenkang wenkang 20 Mar 20 10:51 ./B/B/moo
-1 0 ---------- 1 wenkang wenkang 21 Mar 20 10:51 ./B/C/kitten
-1 0 ---------- 1 wenkang wenkang 22 Dec 20 10:51 ./C/A/elephant
-1 0 ---------- 1 wenkang wenkang 23 Mar 20 10:51 ./C/B/giraffe
-1 0 ---------- 1 wenkang wenkang 24 Mar 20 10:51 ./C/C/platypus
-1 0 ---------- 1 wenkang wenkang 25 Mar 20 10:51 ./C/D/stingray
-1 0 ---------- 1 wenkang wenkang 26 Mar 20 10:51 ./D/A/zebra
-1 0 ---------- 1 wenkang wenkang 27 Mar 20 10:51 ./D/B/horse
-1 0 ---------- 1 wenkang wenkang 28 Mar 20 10:51 ./D/C/unicorn
-1 0 ---------- 1 wenkang wenkang 29 Apr 20 10:51 ./D/D/dragon
+      109      1 -rw-r--r--   1 wsu1     student        10 Apr 26 14:27 ./c/april
+      113      1 -rw-r--r--   1 wsu1     student        11 Apr 26 14:27 ./banana
+      115      1 -rw-r--r--   1 wsu1     student        12 Apr 26 14:27 ./c/v/dog
+      119      1 -rw-r--r--   1 wsu1     student        13 Apr 26 14:27 ./d/o/cloud
+      110      1 -rw-r--r--   1 wsu1     student        14 Apr 26 14:27 ./apple
+      123      1 -rw-r--r--   1 wsu1     student        15 Apr 26 14:27 ./b/a/orange
+      124      1 -rw-r--r--   1 wsu1     student        16 Apr 26 14:27 ./b/melon
+      108      1 -rw-r--r--   1 wsu1     student        17 Apr 26 14:27 ./a/e/p/fire
+      106      1 -rw-r--r--   1 wsu1     student        18 Apr 26 14:27 ./a/e/milk
+      101      1 -rw-r--r--   1 wsu1     student        19 Apr 26 14:27 ./a/bubble tea
+

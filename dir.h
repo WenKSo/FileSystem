@@ -1,5 +1,5 @@
 // Name: Wenkang Su & Donald Tang
-// wsu1, dtang4
+// Login: wsu1, dtang4
 // I pledge my honor that I have abided by the Stevens Honor System.
 #ifndef DIR_H_
 #define DIR_H_
@@ -25,6 +25,17 @@ public:
     	this->name = name;
     	this->parent = parent;
     	this->dBox = dBox;
+    }
+
+    void updateTimeStamp(){
+            char buffer[80];
+			time_t rawtime;
+  			struct tm * timeinfo;
+			time (&rawtime);
+  			timeinfo = localtime (&rawtime);
+    		struct tm *tmp ;
+			strftime(buffer, sizeof(buffer), "%b %d %R", timeinfo);
+			timestamp = string(buffer);
     }
 };
 

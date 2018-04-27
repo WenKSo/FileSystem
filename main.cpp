@@ -1,5 +1,5 @@
 // Name: Wenkang Su & Donald Tang
-// wsu1, dtang4
+// Login: wsu1, dtang4
 // I pledge my honor that I have abided by the Stevens Honor System.
 #include "dir.h"
 #include "file.h"
@@ -13,6 +13,8 @@
 #include <deque>
 #include <queue>
 #include <stdlib.h>
+#include <algorithm>
+#include <ctype.h>
 
 using namespace std;
 
@@ -134,20 +136,24 @@ int allocateMemory(File* file, dNode* droot, int blockSize, int numOfBlocks, vec
 	int allocBlocks = 0;
 	int fid;
 	int tmp_num = numOfBytes;
-	//If obit == 1, that means this function is used by cmd "remove" but not initializing file_list
+	//If obit == 1, that means this function is used by cmd "append" but not initializing file_list
 	if(obit == 1){
 		int fbytes = file->getLeftBytes(blockSize);
 		// If freeBytes can handle the numOfBytes
 		if(numOfBytes <= fbytes){
 			file->freeBytes -= numOfBytes;
+			if(file->froot != NULL){
 			int blockID = file->getLastNode()->startAddress/blockSize;
 			freeBytes[blockID] = file->freeBytes;
+			}
 			return 1;
 		}
 		numOfBytes -= fbytes;
 		file->freeBytes = 0;
+		if(file->froot != NULL){
 		int blockID = file->getLastNode()->startAddress/blockSize;
 		freeBytes[blockID] = 0;
+		}
 	}
 	// Calculate the num of blocks to be used
 	int modBytes = numOfBytes % blockSize;
@@ -155,6 +161,7 @@ int allocateMemory(File* file, dNode* droot, int blockSize, int numOfBlocks, vec
 	else useBlocks = numOfBytes / blockSize;
 	if(enoughMemory(useBlocks,droot,blockSize)){
 		dNode* curr = droot;
+		
 		while(useBlocks > 0){
 			// Try to find a free dNode
 			while(droot->status == true){
@@ -172,7 +179,7 @@ int allocateMemory(File* file, dNode* droot, int blockSize, int numOfBlocks, vec
 				useBlocks = 0;
 			}
 			// If this node is not enough to allocate
-			else if(useBlocks > (droot->endID - droot->startID + 1)){
+			else if(useBlocks >= (droot->endID - droot->startID + 1)){
 				// Change the start&end IDs & Merging the nodes
 				curr->endID = droot->next->endID;
 				curr->next = droot->next->next;
@@ -216,7 +223,7 @@ int allocateMemory(File* file, dNode* droot, int blockSize, int numOfBlocks, vec
 // Helper function to handle the LDisk: freed the specific block in LDISK with blockID
 void freeDisk(dNode* droot, int blockID){
 	dNode* curr = droot;
-	dNode* tmp = droot;
+	dNode* tmp = droot;	
 	// Try to find the target node 
 	while(curr){
 		if(blockID <= curr->endID && blockID >= curr->startID){
@@ -225,9 +232,18 @@ void freeDisk(dNode* droot, int blockID){
 		tmp = curr;
 		curr = curr->next;
 	}
+	if(blockID == 1) {
+		// if(droot->next->status) droot->status = false;
+		// else {droot->next->startID = 1; droot = droot->next;}
+		if(droot->next->status) {dNode* newNode = new dNode(1,1,false); newNode->next = droot; droot = newNode;}
+		else droot->next->startID = 1;
+		cout << droot->startID << " " << droot->endID << " " << droot->status <<endl;
+		cout << droot->next->startID << " " << droot->next->endID << " " << droot->next->status <<endl;
+	}
 	// If there is only one block in the node
-	if(curr->startID == curr->endID){
-		if(curr->next)tmp->next = curr->next->next;
+	else if(curr->startID == curr->endID){
+		cout << curr->startID << " " << tmp->endID << endl;
+		if(curr->next) tmp->next = curr->next->next;
 		tmp->endID = curr->next->endID;
 	}
 	// If the target block is the first block
@@ -255,7 +271,6 @@ void freeDisk(dNode* droot, int blockID){
 
 //Helper function to freed the memory, numOfBytes is the num of bytes that used to free
 int freeMemory(File* file, int numOfBytes, int blockSize, vector<int>& freeBytes, dNode* droot){
-	cout << numOfBytes <<endl;
 	int tmp_num = numOfBytes;
 	// If numOfBytes does not exceed file size
 	if(numOfBytes <= file->size){
@@ -276,7 +291,6 @@ int freeMemory(File* file, int numOfBytes, int blockSize, vector<int>& freeBytes
 					parent = curr;
 					curr = curr->next;
 				}
-				cout << file->getNumOfNodes() << endl;
 				int blockID = curr->startAddress / blockSize;
 				freeBytes[blockID] = blockSize; // update vector freeBytes
 				parent->next = NULL; // remove last fnode		
@@ -285,6 +299,7 @@ int freeMemory(File* file, int numOfBytes, int blockSize, vector<int>& freeBytes
 				file->freeBytes = 0; //update file freeBytes
 			}
 		}
+		if(tmp_num == file->size) file->froot = NULL;
 		file->size -= tmp_num; // update file size
 		//cout << file->size << endl;
 		return 1;
@@ -293,18 +308,20 @@ int freeMemory(File* file, int numOfBytes, int blockSize, vector<int>& freeBytes
 }
 
 // remove function that can used by cmd "delete" and "remove"
-void remove(Dir* curr, vector<string> cmd, int blockSize, vector<int>& freeBytes, dNode* droot){
-	File* tmpFile;
+int remove(Dir* curr, vector<string> cmd, int blockSize, vector<int>& freeBytes, dNode* droot){
+	File* tmpFile = NULL;
 	// To get the target file
-	for(int i = 0; i < curr->fBox.size(); i++){
+	for(int i = 0; i < curr->fBox.size(); i++)
 		if(curr->fBox[i]->name == cmd[1]){  
 			tmpFile = curr->fBox[i];
 			break;
 		}
-	}
+	if(tmpFile == NULL) {cerr << "File Not found!" << endl; return 1;}
 	// free the memory and return the rbit
 	int rbit = freeMemory(tmpFile,stoi(cmd[2]),blockSize,freeBytes,droot);
-	if(!rbit) cerr << "Error: Exceed file size!" << endl;
+	if(!rbit) {cerr << "Error: Exceed file size!" << endl; return 1;}
+	tmpFile->updateTimeStamp();
+	return 0;	
 }
 
 //prFiles is a function for the command prfiles that prints out the information for all files
@@ -319,19 +336,21 @@ void prFiles(Dir* curr) {
 		//loop through curent directory's fbox to access files that we need to print information about
 		for (int i = 0; i < tmp->fBox.size(); i++) {
 			File* newFile = tmp->fBox[i];
-			fNode* curr = newFile->froot;
+			fNode* lfile = newFile->froot;
 			//loop through file's LFile to find the memory addresses that the file is located in
-			while (curr) {
-				addresses += to_string(curr->startAddress) + " ";
-				curr = curr->next;
+			while (lfile) {
+				addresses += to_string(lfile->startAddress) + " ";
+				lfile = lfile->next;
 			}
 			//print out the information of the current file
+			cout << "----------------------------------------" << endl;
 			cout << "File name: " << newFile->name << endl;
 			cout << "File size: " << newFile->size << endl;
 			cout << "Time stamp: " << newFile->timestamp << endl;
 			cout << "Addresses: " << addresses << endl;
+			cout << "----------------------------------------" << endl;
+			addresses = "";
 		}
-		addresses = "";
 		parentDir.pop();
 		children = tmp->dBox;
 		//push children elements so that we can traverse through them in the next iteration
@@ -362,6 +381,19 @@ vector<string> cmdParser(string cmd){
 	}
 	return result;
 }
+// parse the file information into a vector
+vector<string> fileParser(string fileInfo){
+	vector<string> result;
+	while(fileInfo[0] == ' ') fileInfo = fileInfo.substr(1);
+	for(int i = 0; i < 10; i++){
+		string doc;
+		while(fileInfo[0] != ' ') {doc += fileInfo[0];fileInfo = fileInfo.substr(1);}
+		result.push_back(doc);
+		while(fileInfo[0] == ' ') fileInfo = fileInfo.substr(1);
+	}
+	result.push_back(fileInfo);
+	return result;
+}
 int main(int argc, char * const argv[]) {
 
 	//our program will take in 4 parameters: a directory list, a file list, disk size, and block size
@@ -369,16 +401,25 @@ int main(int argc, char * const argv[]) {
 	int blockSize;
 	int numBlocks;
 	istringstream iss;
+	string dirList;
+	string fileList;
 	
 	//error checking for arguments 
 	//if total number of arguments is not 5
-	if (argc != 5) {
+	if (argc != 9) {
 		cerr << "Error: Please enter the correct amount of arguments" << endl;
 		return 1;
 	}
-	//initialize LDisk
-	diskSize = atoi(argv[3]);
-	blockSize = atoi(argv[4]);
+
+	//checking flags
+	for(int i = 1; i < 8; i= i + 2){
+		string arg = argv[i];	
+		if(!arg.compare("-f")) fileList = argv[i+1];
+		else if(!arg.compare("-d")) dirList = argv[i+1];
+		else if(!arg.compare("-s"))diskSize = stoi(argv[i+1]);
+		else if (!arg.compare("-b")) blockSize = stoi(argv[i+1]);
+	}
+
 	//check validity of size of disk argument
 	if (diskSize <= 0) {
 		cerr << "Error: Please enter a positive integer for size of disk" << endl;
@@ -401,9 +442,8 @@ int main(int argc, char * const argv[]) {
 		freeBytes.push_back(blockSize);
 	}
 
-	//ERROR CHECKING FOR PARAMETERS
 	//error check for dir_list.txt
-	ifstream in_1(argv[1]);
+	ifstream in_1(dirList);
 	if (!(in_1)) {
 		cerr << "Error: Please input a valid directory file" << endl;
 		return 1;
@@ -418,26 +458,28 @@ int main(int argc, char * const argv[]) {
 		genDirByPath(parsed);
 	}
 	//error check for file_list.txt
-	ifstream in_2(argv[2]);
+	ifstream in_2(fileList);
 	if (!(in_2)) {
 		cerr << "Error: Please input a valid file list file" << endl;
 		return 1;
 	}
 	//initialize variables needed for file
-	int size;
-	int blockID;
+	int size = 0;
+	int blockID = 0;
 	string timeStamp;
-	// we will be parsing in 11 lines of text from file_list, but we only need file7, file8, file9, file10, andn file11
-	string file1, file2, file3, file4, file5, file6, file7, file8, file9, file10, file11;
-	while(in_2 >> file1 >> file2 >> file3 >> file4 >> file5 >> file6 >> file7 >> file8 >> file9 >> file10 >> file11) {
+	string input;
+	vector<string> fileInfo;
+	while(getline(in_2,input)){
+		if(input != ""){
+		fileInfo = fileParser(input);
 		//for each line we read we will 
 		//pass in the directory to our parser function
 		//generate a new file
 		//allocate the file in memory
 		//calculate the freebytes of the file after allocating
-		deque<string> parsed = parser(file11);
-		size = stoi(file7);
-		timeStamp = file8 + " " + file9 + " " + file10;
+		size = stoi(fileInfo[6]);
+		timeStamp = fileInfo[7] + " " + fileInfo[8] + " " + fileInfo[9];
+		deque<string> parsed = parser(fileInfo[10]);
 		//create a new file object
 		File* newFile = genFileByPath(parsed, size, timeStamp);
 		//allocate the file in memory
@@ -458,7 +500,7 @@ int main(int argc, char * const argv[]) {
 			freeBytes[blockID] = fbytes;
 		}
 	}
-
+	}
 	//implementation of commands, start at root
 	Dir* curr = root;
 	while(true){
@@ -470,10 +512,7 @@ int main(int argc, char * const argv[]) {
 		//get user input
 		vector<string> cmd = cmdParser(inputText);
 		if (cmd[0] == "exit") break;
-		//check if user input matches any commands and if so run those commands
 		//exit will exit the program
-		if (cmd[0] == "-s") cout << diskSize << endl;
-		if (cmd[0] == "-b") cout << blockSize << endl;
 		//cd will set the current directory to the directory given by the user if it exists in our directory tree
 		if (cmd[0] == "cd") {
 			bool foundDir = false;
@@ -511,17 +550,10 @@ int main(int argc, char * const argv[]) {
 			if (cmd.size() == 1) {
 				cerr << "Must provide a filename" << endl;
 			}
-			//get current time to pass in timestamp to file constructor
-			char buffer[80];
-			time_t rawtime;
-  			struct tm * timeinfo;
-			time (&rawtime);
-  			timeinfo = localtime (&rawtime);
-    		struct tm *tmp ;
-			strftime(buffer, sizeof(buffer), "%b %d %R", timeinfo);
-			string timestamp = string(buffer);
 			//create new file object of name given by user
-			File* newFile = new File(cmd[1],0,timestamp,curr);
+			File* newFile = new File(cmd[1],0,"",curr);
+			newFile->updateTimeStamp();			
+			curr->updateTimeStamp();
 			curr->fBox.push_back(newFile);
 		}
 		//mkdir creates a new directory in the current directory
@@ -531,15 +563,6 @@ int main(int argc, char * const argv[]) {
 		}
 		//delete will delete a file or directory
 		if (cmd[0] == "delete"){
-			//get current time if deleting a file to modify timestamp of parent directory
-			char buffer[80];
-			time_t rawtime;
-  			struct tm * timeinfo;
-			time (&rawtime);
-  			timeinfo = localtime (&rawtime);
-    		struct tm *tmp ;
-			strftime(buffer, sizeof(buffer), "%b %d %R", timeinfo);
-			string timestamp = string(buffer);
 			//check if name is directory and delete if so
 			for(int i = 0; i < curr->dBox.size(); i++) 
 				if(curr->dBox[i]->name == cmd[1]){
@@ -550,33 +573,51 @@ int main(int argc, char * const argv[]) {
 			for(int i = 0; i < curr->fBox.size(); i++) 
 				if(curr->fBox[i]->name == cmd[1]){
 					cmd.push_back(to_string(curr->fBox[i]->size));
-					remove(curr, cmd, blockSize, freeBytes, droot);
+					if(remove(curr, cmd, blockSize, freeBytes, droot)) break;
 					curr->fBox.erase(curr->fBox.begin()+i);
-					curr->timestamp = timestamp;
-					cout << curr->timestamp << endl;
+					curr->updateTimeStamp();
+					cout << "Current Directory Updated: " << curr->timestamp << endl;
 				}
 		}
 		
 		//append will append a number of bytes to the file
 		if (cmd[0] == "append"){
-			File* tmpFile;
+			if (cmd.size() == 1) {
+				cerr << "Must provide a filename" << endl;
+				continue;
+			}
+			if (cmd.size() == 2) {
+				cerr << "Must provide num of bytes you want to append" << endl;
+				continue;
+			}
+			File* tmpFile = NULL;
 			for(int i = 0; i < curr->fBox.size(); i++) 
 				if(curr->fBox[i]->name == cmd[1]){ 
 					tmpFile = curr->fBox[i];
 					break;
 				}
+			if(tmpFile == NULL) {cerr << "File Not found!" << endl; continue;}
 			int bit = allocateMemory(tmpFile,droot,blockSize,numOfBlocks,freeBytes,stoi(cmd[2]),1);
 			if (bit == 0) cerr << "Out Of Space" << endl;
-			else tmpFile->size += stoi(cmd[2]);
+			else {tmpFile->updateTimeStamp(); tmpFile->size += stoi(cmd[2]);}
 		}
 		//remove will delete a number of byte from the file
 		if (cmd[0] == "remove"){
-			remove(curr, cmd, blockSize, freeBytes, droot);
+			if (cmd.size() == 1) {
+				cerr << "Must provide a filename" << endl;
+				continue;
+			}
+			if (cmd.size() == 2) {
+				cerr << "Must provide num of bytes you want to remove" << endl;
+				continue;
+			}
+			if(remove(curr, cmd, blockSize, freeBytes, droot) == 1) continue;
 		}
 		//prfiles will print out file information for every file in the directory tree
 		if (cmd[0] == "prfiles"){
 			prFiles(root);
 		}
+
 		//Initialize disk
 		vector<int> disk;
 		for(int i = 0; i < diskSize; i++) disk.push_back(0);
@@ -592,6 +633,7 @@ int main(int argc, char * const argv[]) {
 			int useCounter = 0;
 			int freeCounter = 0;
 			int fragmentation = 0;
+			//for(int i = 0; i < freeBytes.size(); i++) fragmentation += freeBytes[i];
 			// Stop unitil i >= diskSize
 			while(i < diskSize){
 				// looping for consecutive 1s
@@ -624,14 +666,14 @@ int main(int argc, char * const argv[]) {
 					}
 				}
 			}
-			cout << "fragmentation: " << fragmentation << " bytes" << endl;
+			cout << "fragmentation: " << fragmentation+1 << " bytes" << endl;
 		}
 		//dir will print out the directory tree in breadth first order
 		if (cmd[0] == "dir"){
-			printDir(curr);
+			printDir(root);
 		}
-		//--------------------------------------------------------------
 		// Test for debugging
+		// Print the file
 		if (cmd[0] == "show"){
 			File* tmpFile;
 			for(int i = 0; i < curr->fBox.size(); i++) 
@@ -639,20 +681,28 @@ int main(int argc, char * const argv[]) {
 					tmpFile = curr->fBox[i];
 					break;
 				}
-			cout << tmpFile->name << ": " << tmpFile->size << endl;
-			cout << "num of fnodes: " << tmpFile->getNumOfNodes() << endl;
+			cout << "----------------------------------------" << endl;
+			cout << "File Name: " << tmpFile->name << endl;
+			cout << "Size: " << tmpFile->size << endl;
+			cout << "Num of fnodes: " << tmpFile->getNumOfNodes() << endl;
 			cout << "Left Bytes: " << tmpFile->getLeftBytes(blockSize) << endl;
+			if(tmpFile->froot != NULL){
+			cout << "First Address: " << tmpFile->froot->startAddress << endl;
 			cout << "Last Address: " << tmpFile->getLastNode()->startAddress << endl;
+			}
+			cout << "----------------------------------------" << endl;
 		}
 
-		if(cmd[0] == "display"){
+		if (cmd[0] == "display"){
+			cout << "----------------------------------------" << endl;
 			dNode* tmpCurr = droot;
 			while(tmpCurr){
-				cout << tmpCurr->startID << " " << tmpCurr->endID << " " << tmpCurr->status << endl;
+				if (tmpCurr->status) cout << "In Use: " << tmpCurr->startID << " " << tmpCurr->endID << endl;
+				else cout << "Free: " << tmpCurr->startID << " " << tmpCurr->endID << endl;
 				tmpCurr = tmpCurr->next;
 			}
+			cout << "----------------------------------------" << endl;
 		}
-		//--------------------------------------------------------------
 	}
 }
 
