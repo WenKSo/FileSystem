@@ -5,7 +5,7 @@ Names: Donald Tang and Wenkang Su
 
 To run our code:
 1. Compile our code using the makefile.
-2. Once the code has been successfulled compiled, in command line type "./main" to run the built object file and then pass in 4 flags and 4 arguments. The form of the four arguments is as follows:</b> 
+2. Once the code has been successfulled compiled, in command line type "./main" to run the built object file and then pass in 4 flags and 4 arguments. The form of the four arguments is as follows:<br/> 
 • ```-f [input files storing information on files]```<br/> 
 • ```-d [input files storing information on directories]```<br/>
 • ```-s [disk size]```<br/> 
