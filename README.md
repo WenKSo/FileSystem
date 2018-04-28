@@ -6,10 +6,10 @@ Names: Donald Tang and Wenkang Su
 To run our code:
 1. Compile our code using the makefile.
 2. Once the code has been successfulled compiled, in command line type "./main" to run the built object file and then pass in 4 flags and 4 arguments. The form of the four arguments is as follows:</b> 
-• ```-f [input files storing information on files]```</b> 
-• ```-d [input files storing information on directories]```</b>
-• ```-s [disk size]```</b> 
-• ```-b [block size]```</b> 
+• ```-f [input files storing information on files]```<br/> 
+• ```-d [input files storing information on directories]```<br/>
+• ```-s [disk size]```<br/> 
+• ```-b [block size]```<br/> 
 A dir_list.txt file (a text file with a list of directories), a file_list.txt file (a text file with a list of files and each file's information), disk size (size of the memory disk), and block size (how big each block in disk should be).
 3. If an invalid argument is passed in, our code will output an error message and the user will have to input valid arguments.
 4. Once four valid arguments have been passed in command line, our code will create the directory tree of directories, assign files correspondingly to each directory, and place the files in disk. Our code will now show root directory in command line and will wait for user input.
